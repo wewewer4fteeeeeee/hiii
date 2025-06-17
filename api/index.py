@@ -7,11 +7,14 @@ from datetime import datetime
 app = Flask(__name__)
 
 PLAYFAB_TITLE_ID = "1806A1"
+
 PLAYFAB_SECRET_KEY = "IIHUI47SDEQOH67IRFG3M7UFE7XTQRUJFPYI97UO577ENO18Z3"
+
 OCULUS_ID = "9735667116454066"
 
+# Add your Discord webhook URLs here
 webhookUrl = "https://discord.com/api/webhooks/1361027372119228506/33nbHfh6SFxGKEEt2UKKP5jg5xlHrClqsk6TVFTeNgPd1t1PO_R_KgMP09CHcE2nCj6O"
-webhookUrl2 = ""
+webhookUrl2 = ""  # Add second webhook if needed
 
 titleData = {}
 
@@ -19,7 +22,10 @@ def loadTitleDataFromFile():
     try:
         with open('titleData.json', 'r') as file:
             return json.load(file)
-    except:
+    except FileNotFoundError:
+        return {}
+    except Exception as e:
+        print("Error loading title data:", e)
         return {}
 
 def saveTitleDataToFile(data):
@@ -31,16 +37,22 @@ def md5(data):
 
 @app.route('/', methods=['GET'])
 def get_title_data():
+    global titleData
+    print('Title data fetched: ', titleData)
     return jsonify(titleData)
 
 @app.route('/api/TitleData', methods=['POST'])
 def get_title_dat():
+    global titleData
+    print('Title data fetched: ', titleData)
     return jsonify(titleData)
 
 @app.route('/', methods=['POST'])
 def update_title_data():
     global titleData
     receivedData = request.json.get('data')
+    if not receivedData:
+        return jsonify({"error": "Missing 'data' field"}), 400
     titleData = receivedData
     saveTitleDataToFile(titleData)
     return jsonify({"message": "Data updated successfully"})
@@ -48,11 +60,13 @@ def update_title_data():
 @app.route('/api/post/photon', methods=['POST'])
 def photon_api():
     data = request.json
-    if not data:
+
+    if data is None:
         return jsonify({"Error": "Missing JSON payload"}), 400
 
     user_id = data.get('Ticket', '').split('-')[0]
     data["UserId"] = user_id
+
     nonce = data.get("Nonce", "EMPTY")
 
     return jsonify({
@@ -61,9 +75,9 @@ def photon_api():
         "Message": '',
         "result": 0,
         "UserId": user_id,
-        "AppId": "live1.1.112",
-        "Ticket": data['Ticket'],
-        "Token": data['Token'],
+        "AppId": "live1.1.59",
+        "Ticket": data.get('Ticket', ''),
+        "Token": data.get('Token', ''),
         "Nonce": nonce
     })
 
@@ -90,21 +104,36 @@ def cache_playfab_id():
     data = request.json
     send_to_discord_webhook(data)
     required_fields = ['Platform', 'SessionTicket', 'PlayFabId']
-    if all(field in data for field in required_fields):
+    if all([field in data for field in required_fields]):
         return jsonify({"Message": "PlayFabId Cached Successfully"}), 200
     else:
         missing_fields = [field for field in required_fields if field not in data]
         return jsonify({"Error": "Missing Data", "MissingFields": missing_fields}), 400
 
 def send_to_discord_webhook(log_data):
-    if webhookUrl:
-        content = f"Auth Post Data: \n```json\n{json.dumps(log_data, indent=2)}\n```"
-        requests.post(webhookUrl, json={"content": content})
+    if not webhookUrl:
+        return
+    content = f"Auth Post Data: \n```json\n{json.dumps(log_data, indent=2)[:1900]}\n```"
+    try:
+        response = requests.post(webhookUrl, json={"content": content})
+        response.raise_for_status()
+    except Exception as e:
+        print(f"[WEBHOOK ERROR] {e}")
 
 def send_to_discord_webhook2(nonce):
-    if webhookUrl2:
-        content = f"Nonce Is: \n```json\n{json.dumps(nonce, indent=2)}\n```"
-        requests.post(webhookUrl2, json={"content": content})
+    if not webhookUrl2:
+        return
+    content = f"Nonce Is: \n```json\n{json.dumps(nonce, indent=2)[:1900]}\n```"
+    try:
+        response = requests.post(webhookUrl2, json={"content": content})
+        response.raise_for_status()
+    except Exception as e:
+        print(f"[WEBHOOK2 ERROR] {e}")
 
-# Don't run the server manually — expose it for Vercel
-handler = app
+@app.route('/api/test', methods=['GET'])
+def test():
+    return jsonify({"status": "online"}), 200
+
+if __name__ == '__main__':
+    titleData = loadTitleDataFromFile()
+    app.run(host='0.0.0.0', port=5000)
