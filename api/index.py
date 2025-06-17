@@ -75,7 +75,7 @@ def photon_api():
         "Message": '',
         "result": 0,
         "UserId": user_id,
-        "AppId": "live1.1.59",
+        "AppId": "live1.1.112",
         "Ticket": data.get('Ticket', ''),
         "Token": data.get('Token', ''),
         "Nonce": nonce
