@@ -10,7 +10,6 @@ PLAYFAB_TITLE_ID = "1806A1"
 PLAYFAB_SECRET_KEY = "IIHUI47SDEQOH67IRFG3M7UFE7XTQRUJFPYI97UO577ENO18Z3"
 OCULUS_ID = "9735667116454066"
 
-# Webhook URLs (optional)
 webhookUrl = ""
 webhookUrl2 = ""
 
@@ -20,10 +19,7 @@ def loadTitleDataFromFile():
     try:
         with open('titleData.json', 'r') as file:
             return json.load(file)
-    except FileNotFoundError:
-        return {}
-    except Exception as e:
-        print("Error loading title data:", e)
+    except:
         return {}
 
 def saveTitleDataToFile(data):
@@ -35,12 +31,10 @@ def md5(data):
 
 @app.route('/', methods=['GET'])
 def get_title_data():
-    global titleData
     return jsonify(titleData)
 
 @app.route('/api/TitleData', methods=['POST'])
 def get_title_dat():
-    global titleData
     return jsonify(titleData)
 
 @app.route('/', methods=['POST'])
@@ -54,7 +48,7 @@ def update_title_data():
 @app.route('/api/post/photon', methods=['POST'])
 def photon_api():
     data = request.json
-    if data is None:
+    if not data:
         return jsonify({"Error": "Missing JSON payload"}), 400
 
     user_id = data.get('Ticket', '').split('-')[0]
@@ -67,7 +61,7 @@ def photon_api():
         "Message": '',
         "result": 0,
         "UserId": user_id,
-        "AppId": "live1.1.59",
+        "AppId": "live1.1.112",
         "Ticket": data['Ticket'],
         "Token": data['Token'],
         "Nonce": nonce
@@ -112,7 +106,5 @@ def send_to_discord_webhook2(nonce):
         content = f"Nonce Is: \n```json\n{json.dumps(nonce, indent=2)}\n```"
         requests.post(webhookUrl2, json={"content": content})
 
-if __name__ == '__main__':
-    titleData = loadTitleDataFromFile()
-    print("Flask server running on Replit URL")
-    app.run(host='0.0.0.0', port=8080)
+# Don't run the server manually — expose it for Vercel
+handler = app
