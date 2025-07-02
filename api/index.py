@@ -1,7 +1,6 @@
-from flask import Flask, request, Response
 import json
 import requests
-import os
+from flask import Flask, request, Response, jsonify
 
 app = Flask(__name__)
 
@@ -10,7 +9,8 @@ SPOOFED_VERSION = "1.29.1.1463"
 SPOOFED_CODE = "1463"
 
 def is_json(headers):
-    return headers.get("Content-Type", "").startswith("application/json")
+    content_type = headers.get("Content-Type", "")
+    return content_type.startswith("application/json")
 
 def patch_json(data: bytes) -> bytes:
     try:
@@ -19,8 +19,8 @@ def patch_json(data: bytes) -> bytes:
             body["AppVersion"] = SPOOFED_VERSION
             body["AppVersionCode"] = SPOOFED_CODE
             return json.dumps(body).encode("utf-8")
-    except:
-        pass
+    except Exception as e:
+        app.logger.warning(f"Failed to patch JSON body: {e}")
     return data
 
 def forward(method, path):
@@ -33,20 +33,27 @@ def forward(method, path):
     if is_json(headers):
         body = patch_json(body)
 
+    app.logger.info(f"Forwarding {method} {path} to {url}")
+
     try:
         resp = requests.request(
             method=method,
             url=url,
             headers=headers,
             data=body,
-            stream=False,
-            timeout=10
+            timeout=10,
         )
-        excluded = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
-        proxied_headers = [(k, v) for k, v in resp.raw.headers.items() if k.lower() not in excluded]
-        return Response(resp.content, resp.status_code, proxied_headers)
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "Upstream request timed out"}), 504
+    except requests.exceptions.ConnectionError:
+        return jsonify({"error": "Failed to connect to upstream server"}), 502
     except Exception as e:
-        return {"error": str(e)}, 500
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
+
+    excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+    response_headers = [(k, v) for k, v in resp.raw.headers.items() if k.lower() not in excluded_headers]
+
+    return Response(resp.content, resp.status_code, response_headers)
 
 @app.route("/v2/account", methods=["GET"])
 def v2_account():
@@ -70,4 +77,7 @@ def v2_auth_custom():
 
 @app.route("/")
 def index():
-    return "<h2>✅ Flask Proxy Running on Vercel</h2>"
+    return "<h2>✅ Flask Proxy Running</h2>"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=3002, debug=True)
