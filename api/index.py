@@ -4,7 +4,8 @@ import json
 
 app = Flask(__name__)
 
-TARGET_BASE = "https://animalcompany.us-east1.nakamacloud.io"
+# Update target base to your PythonAnywhere backend
+TARGET_BASE = "https://bytecompany-0x11avaite.pythonanywhere.com"
 SPOOFED_VERSION = "1.29.1.1463"
 SPOOFED_CODE = "1463"
 
@@ -22,12 +23,11 @@ def patch_json_body(raw_body):
 def forward_request(path):
     url = TARGET_BASE + path
 
-    # Remove headers that cause issues, keep Authorization, User-Agent, etc.
     excluded_headers = {"content-length", "transfer-encoding", "connection", "host"}
     headers = {
         k: v for k, v in request.headers.items() if k.lower() not in excluded_headers
     }
-    headers["Host"] = "animalcompany.us-east1.nakamacloud.io"
+    headers["Host"] = url.split("//")[1].split("/")[0]  # Host based on TARGET_BASE
     headers["User-Agent"] = f"MetaQuestClient/{SPOOFED_VERSION}"
 
     body = request.data
