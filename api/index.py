@@ -8,10 +8,6 @@ TARGET_BASE = "https://animalcompany.us-east1.nakamacloud.io"
 SPOOFED_VERSION = "1.29.1.1463"
 SPOOFED_CODE = "1463"
 
-def is_json(headers):
-    content_type = headers.get("Content-Type", "")
-    return content_type.startswith("application/json")
-
 def patch_json(data: bytes) -> bytes:
     try:
         body = json.loads(data)
@@ -23,14 +19,17 @@ def patch_json(data: bytes) -> bytes:
         app.logger.warning(f"Failed to patch JSON body: {e}")
     return data
 
-def forward(method, path):
+def forward(method, path, body=None, headers=None):
     url = f"{TARGET_BASE}{path}"
-    headers = dict(request.headers)
+    headers = headers or dict(request.headers)
     headers["Host"] = "animalcompany.us-east1.nakamacloud.io"
     headers["User-Agent"] = f"MetaQuestClient/{SPOOFED_VERSION}"
 
-    body = request.get_data()
-    if is_json(headers):
+    if body is None:
+        body = request.get_data()
+
+    content_type = headers.get("Content-Type", "")
+    if method == "POST" and content_type.startswith("application/json"):
         body = patch_json(body)
 
     app.logger.info(f"Forwarding {method} {path} to {url}")
@@ -55,25 +54,37 @@ def forward(method, path):
 
     return Response(resp.content, resp.status_code, response_headers)
 
+# GET routes (no body to parse)
 @app.route("/v2/account", methods=["GET"])
 def v2_account():
     return forward("GET", "/v2/account")
 
+# POST routes — explicitly parse JSON, patch, and forward
+def post_route(path):
+    try:
+        json_body = request.get_json(force=True)
+    except Exception as e:
+        return jsonify({"error": f"Invalid JSON body: {str(e)}"}), 400
+
+    body_bytes = json.dumps(json_body).encode("utf-8")
+    headers = dict(request.headers)
+    return forward("POST", path, body=body_bytes, headers=headers)
+
 @app.route("/v2/storage", methods=["POST"])
 def v2_storage():
-    return forward("POST", "/v2/storage")
+    return post_route("/v2/storage")
 
 @app.route("/v2/account/link/device", methods=["POST"])
 def v2_link_device():
-    return forward("POST", "/v2/account/link/device")
+    return post_route("/v2/account/link/device")
 
 @app.route("/v2/rpc/clientBootstrap", methods=["POST"])
 def v2_rpc_bootstrap():
-    return forward("POST", "/v2/rpc/clientBootstrap")
+    return post_route("/v2/rpc/clientBootstrap")
 
 @app.route("/v2/account/authenticate/custom", methods=["POST"])
 def v2_auth_custom():
-    return forward("POST", "/v2/account/authenticate/custom")
+    return post_route("/v2/account/authenticate/custom")
 
 @app.route("/")
 def index():
