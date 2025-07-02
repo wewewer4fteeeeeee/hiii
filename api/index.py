@@ -1,8 +1,8 @@
+# api/main.py
 from fastapi import FastAPI, Request, Response, WebSocket
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import requests, json, logging, os, re, urllib.parse
-from datetime import datetime
+import requests, json, os, re, urllib.parse
 from websockets.client import connect as ws_connect
 
 app = FastAPI()
@@ -145,7 +145,3 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.api_route('/v2/{path:path}', methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
 async def handle_all_v2(path: str, request: Request):
     return await forward_request(f"v2/{path}", request)
-
-if __name__ == '__main__':
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000)
