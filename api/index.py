@@ -59,7 +59,7 @@ def forward(method, path, body=None, headers=None):
 def v2_account():
     return forward("GET", "/v2/account")
 
-# POST routes — explicitly parse JSON, patch, and forward
+# POST routes — parse JSON, patch versions, forward
 def post_route(path):
     try:
         json_body = request.get_json(force=True)
