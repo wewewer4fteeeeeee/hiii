@@ -1,109 +1,151 @@
-import json
-import os
-from flask import Flask, request, Response
-import urllib3
+from fastapi import FastAPI, Request, Response, WebSocket
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+import requests, json, logging, os, re, urllib.parse
+from datetime import datetime
+from websockets.client import connect as ws_connect
 
-app = Flask(__name__)
-http = urllib3.PoolManager()
+app = FastAPI()
 
-TARGET_BASE = "https://animalcompany.us-east1.nakamacloud.io"
-VERSION_STRING = "1.29.1.1463"
-VERSION_CODE = "1463"
-USERDATA_FILE = "user_account_data.json"
+TARGET_BASE = 'https://animalcompany.us-east1.nakamacloud.io'
+WEBHOOK_URL = 'webhookgohere'
+LOG_DIR = "request_logs"
+os.makedirs(LOG_DIR, exist_ok=True)
 
-def save_user_account_data(username, data):
-    if not os.path.exists(USERDATA_FILE):
-        user_db = {}
-    else:
-        with open(USERDATA_FILE, "r") as f:
-            try:
-                user_db = json.load(f)
-            except json.JSONDecodeError:
-                user_db = {}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    user_db[username] = data
+def spoof_headers(headers: dict):
+    spoofed = {
+        k: v for k, v in headers.items()
+        if not k.lower().startswith("x-replit-") and k.lower() not in ['host', 'content-length', 'transfer-encoding']
+    }
+    spoofed.update({
+        "X-Unity-Version": "1.29.1.1463",
+        "User-Agent": "1.29.1.1463",
+        "App-Version": "1.29.1.1463",
+        "Oculus-SDK-Version": "1463",
+        "Device-Model": "Quest2",
+        "Platform": "Android",
+        "Device-ID": "00:00:00:00:00:00",
+        "X-Platform-Version": "1.29.1.1463"
+    })
+    return spoofed
 
-    with open(USERDATA_FILE, "w") as f:
-        json.dump(user_db, f, indent=2)
+def spoof_body(body: str):
+    body = re.sub(r'(\"?client[_-]?version\"?\s*[:=]\s*[\"\']?)[^"\']+', r'\g<1>1.29.1.1463', body)
+    body = re.sub(r'(\"?version[_-]?code\"?\s*[:=]\s*)\d+', r'\g<1>1463', body)
+    body = re.sub(r'(\"?oculus[_-]?sdk[_-]?version\"?\s*[:=]\s*)[\"\']?[^"\']+', r'\g<1>1463', body)
+    body = re.sub(r'(\"?platform\"?\s*[:=]\s*)[\"\']?[^"\']+', r'\g<1>Android', body)
+    body = re.sub(r'(\"?device[_-]?model\"?\s*[:=]\s*)[\"\']?[^"\']+', r'\g<1>Quest2', body)
+    body = re.sub(r'(\"?buildNumber\"?\s*[:=]\s*)\d+', r'\g<1>1463', body)
+    body = re.sub(r'(\"?metaQuestStoreVersion\"?\s*[:=]\s*)\d+', r'\g<1>1463', body)
+    body = re.sub(r'(\"?min_supported_version\"?\s*[:=]\s*)[\"\']?[^"\']+', r'\g<1>1.0.0', body)
+    return body
 
-def forward_raw_and_save_response(path, method):
-    url = f"{TARGET_BASE}{path}"
-    body = request.get_data()
+async def forward_request(path: str, request: Request):
+    method = request.method
+    target_url = f"{TARGET_BASE}/{path.lstrip('/')}"
+    headers = spoof_headers(dict(request.headers))
+    raw_data = await request.body()
+    body_str = spoof_body(raw_data.decode('utf-8', errors='ignore'))
 
-    headers = {k: v for k, v in request.headers.items() if k.lower() != "host"}
-    headers["X-Unity-Version"] = VERSION_STRING
-    headers["User-Agent"] = VERSION_STRING
-    headers["VersionCode"] = VERSION_CODE
-    headers = {str(k): str(v) for k, v in headers.items()}
+    if path.endswith("clientBootstrap"):
+        try:
+            json_request = json.loads(body_str)
+            if isinstance(json_request, dict):
+                json_request["clientVersion"] = "1.29.1.1463"
+                json_request["oculus_sdk_version"] = "1463"
+                json_request["deviceModel"] = "Quest2"
+                json_request["platform"] = "Android"
+                json_request["buildNumber"] = "1463"
+                json_request["metaQuestStoreVersion"] = "1463"
+                json_request["min_supported_version"] = "1.0.0"
+                body_str = json.dumps(json_request)
+        except:
+            pass
 
-    resp = http.request(
-        method=method,
-        url=url,
-        body=body,
-        headers=headers,
-        redirect=False,
-        preload_content=False
-    )
-
-    response_body = resp.read()
-    resp.release_conn()
-
-    # Attempt to get username from request headers or default
-    username = request.headers.get("Username", "UnknownUser")
-
-    # Try to parse response body as JSON to save (optional)
     try:
-        json_data = json.loads(response_body.decode('utf-8'))
-    except Exception:
-        json_data = response_body.decode('utf-8', errors='ignore')
+        forwarded_response = requests.request(
+            method=method,
+            url=target_url,
+            headers=headers,
+            data=body_str.encode(),
+            allow_redirects=False
+        )
 
-    # Save response data keyed by username
-    save_user_account_data(username, json_data)
+        content_type = forwarded_response.headers.get("Content-Type", "")
+        modified_content = forwarded_response.content
 
-    return Response(response_body, status=resp.status, headers=resp.headers)
+        if 'application/json' in content_type:
+            try:
+                json_response = forwarded_response.json()
 
+                if 'wallet' in json_response:
+                    wallet = json.loads(json_response['wallet']) if isinstance(json_response['wallet'], str) else json_response['wallet']
+                    wallet = {"hardCurrency": 2000000, "companyCoins": 2000000}
+                    json_response['wallet'] = json.dumps(wallet)
 
-@app.route("/v2/account", methods=["GET"])
-def route_account_get():
-    return forward_raw_and_save_response("/v2/account", "GET")
+                if 'user' in json_response and 'username' in json_response['user']:
+                    json_response['user']['username'] = "ModHub User"
 
+                json_response = {k: v for k, v in json_response.items() if k not in ['forceUpdate', 'unsupportedVersion']}
+                json_response.update({
+                    "forceUpdate": False,
+                    "min_supported_version": "1.0.0",
+                    "recommended_version": "1.29.1.1463",
+                })
 
-# Other routes just do normal raw forwarding without saving
+                modified_content = json.dumps(json_response).encode()
+            except:
+                pass
 
-def forward_raw(path, method):
-    url = f"{TARGET_BASE}{path}"
-    body = request.get_data()
-    headers = {k: v for k, v in request.headers.items() if k.lower() != "host"}
-    headers["X-Unity-Version"] = VERSION_STRING
-    headers["User-Agent"] = VERSION_STRING
-    headers["VersionCode"] = VERSION_CODE
-    headers = {str(k): str(v) for k, v in headers.items()}
+        filtered_headers = {
+            k: v for k, v in forwarded_response.headers.items()
+            if k.lower() not in ['content-encoding', 'transfer-encoding', 'connection']
+        }
 
-    resp = http.request(
-        method=method,
-        url=url,
-        body=body,
-        headers=headers,
-        redirect=False,
-        preload_content=False
-    )
-    response_body = resp.read()
-    resp.release_conn()
-    return Response(response_body, status=resp.status, headers=resp.headers)
+        return Response(
+            content=modified_content,
+            status_code=forwarded_response.status_code,
+            headers=filtered_headers,
+            media_type=content_type
+        )
 
+    except Exception as e:
+        return JSONResponse(content={"error": "Proxy Error", "details": str(e)}, status_code=502)
 
-@app.route("/v2/storage", methods=["POST"])
-def route_storage_post():
-    return forward_raw("/v2/storage", "POST")
+@app.middleware("http")
+async def log_request_route(request: Request, call_next):
+    print(f"[ROUTE] {request.method} {request.url.path}")
+    return await call_next(request)
 
-@app.route("/v2/account/link/device", methods=["POST"])
-def route_link_device_post():
-    return forward_raw("/v2/account/link/device", "POST")
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    token = websocket.query_params.get("token")
+    if not token:
+        await websocket.close(code=1008)
+        return
+    try:
+        token = urllib.parse.quote(token)
+        url = f"wss://animalcompany.us-east1.nakamacloud.io/ws?lang=en&status=True&token={token}"
+        async with ws_connect(url) as ws:
+            result = await ws.recv()
+            await websocket.send_text(result)
+    except Exception as e:
+        await websocket.send_text(f"Error: {e}")
+        await websocket.close()
 
-@app.route("/v2/rpc/clientBootstrap", methods=["POST"])
-def route_client_bootstrap_post():
-    return forward_raw("/v2/rpc/clientBootstrap", "POST")
+@app.api_route('/v2/{path:path}', methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+async def handle_all_v2(path: str, request: Request):
+    return await forward_request(f"v2/{path}", request)
 
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5000)
