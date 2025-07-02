@@ -1,85 +1,109 @@
-from flask import Flask, request, Response
-import requests
 import json
+import os
+from flask import Flask, request, Response
+import urllib3
 
 app = Flask(__name__)
+http = urllib3.PoolManager()
 
-# Update target base to your PythonAnywhere backend
-TARGET_BASE = "https://bytecompany-0x11avaite.pythonanywhere.com"
-SPOOFED_VERSION = "1.29.1.1463"
-SPOOFED_CODE = "1463"
+TARGET_BASE = "https://animalcompany.us-east1.nakamacloud.io"
+VERSION_STRING = "1.29.1.1463"
+VERSION_CODE = "1463"
+USERDATA_FILE = "user_account_data.json"
 
-def patch_json_body(raw_body):
-    try:
-        obj = json.loads(raw_body)
-        if isinstance(obj, dict):
-            obj["AppVersion"] = SPOOFED_VERSION
-            obj["AppVersionCode"] = SPOOFED_CODE
-            return json.dumps(obj).encode("utf-8")
-    except Exception as e:
-        app.logger.error(f"Failed to patch JSON body: {e}")
-    return raw_body
+def save_user_account_data(username, data):
+    if not os.path.exists(USERDATA_FILE):
+        user_db = {}
+    else:
+        with open(USERDATA_FILE, "r") as f:
+            try:
+                user_db = json.load(f)
+            except json.JSONDecodeError:
+                user_db = {}
 
-def forward_request(path):
-    url = TARGET_BASE + path
+    user_db[username] = data
 
-    excluded_headers = {"content-length", "transfer-encoding", "connection", "host"}
-    headers = {
-        k: v for k, v in request.headers.items() if k.lower() not in excluded_headers
-    }
-    headers["Host"] = url.split("//")[1].split("/")[0]  # Host based on TARGET_BASE
-    headers["User-Agent"] = f"MetaQuestClient/{SPOOFED_VERSION}"
+    with open(USERDATA_FILE, "w") as f:
+        json.dump(user_db, f, indent=2)
 
-    body = request.data
-    if request.method == "POST" and headers.get("Content-Type", "").startswith("application/json"):
-        body = patch_json_body(body)
+def forward_raw_and_save_response(path, method):
+    url = f"{TARGET_BASE}{path}"
+    body = request.get_data()
 
-    resp = requests.request(
-        method=request.method,
+    headers = {k: v for k, v in request.headers.items() if k.lower() != "host"}
+    headers["X-Unity-Version"] = VERSION_STRING
+    headers["User-Agent"] = VERSION_STRING
+    headers["VersionCode"] = VERSION_CODE
+    headers = {str(k): str(v) for k, v in headers.items()}
+
+    resp = http.request(
+        method=method,
         url=url,
+        body=body,
         headers=headers,
-        data=body,
-        allow_redirects=False,
+        redirect=False,
+        preload_content=False
     )
 
-    excluded_resp_headers = {
-        "content-encoding",
-        "transfer-encoding",
-        "content-length",
-        "connection",
-        "keep-alive",
-        "proxy-authenticate",
-        "proxy-authorization",
-        "te",
-        "trailers",
-        "upgrade",
-    }
-    response_headers = [
-        (name, value) for name, value in resp.headers.items()
-        if name.lower() not in excluded_resp_headers
-    ]
+    response_body = resp.read()
+    resp.release_conn()
 
-    return Response(resp.content, status=resp.status_code, headers=dict(response_headers))
+    # Attempt to get username from request headers or default
+    username = request.headers.get("Username", "UnknownUser")
+
+    # Try to parse response body as JSON to save (optional)
+    try:
+        json_data = json.loads(response_body.decode('utf-8'))
+    except Exception:
+        json_data = response_body.decode('utf-8', errors='ignore')
+
+    # Save response data keyed by username
+    save_user_account_data(username, json_data)
+
+    return Response(response_body, status=resp.status, headers=resp.headers)
+
 
 @app.route("/v2/account", methods=["GET"])
-def route_account():
-    return forward_request("/v2/account")
+def route_account_get():
+    return forward_raw_and_save_response("/v2/account", "GET")
+
+
+# Other routes just do normal raw forwarding without saving
+
+def forward_raw(path, method):
+    url = f"{TARGET_BASE}{path}"
+    body = request.get_data()
+    headers = {k: v for k, v in request.headers.items() if k.lower() != "host"}
+    headers["X-Unity-Version"] = VERSION_STRING
+    headers["User-Agent"] = VERSION_STRING
+    headers["VersionCode"] = VERSION_CODE
+    headers = {str(k): str(v) for k, v in headers.items()}
+
+    resp = http.request(
+        method=method,
+        url=url,
+        body=body,
+        headers=headers,
+        redirect=False,
+        preload_content=False
+    )
+    response_body = resp.read()
+    resp.release_conn()
+    return Response(response_body, status=resp.status, headers=resp.headers)
+
 
 @app.route("/v2/storage", methods=["POST"])
-def route_storage():
-    return forward_request("/v2/storage")
+def route_storage_post():
+    return forward_raw("/v2/storage", "POST")
 
 @app.route("/v2/account/link/device", methods=["POST"])
-def route_link_device():
-    return forward_request("/v2/account/link/device")
+def route_link_device_post():
+    return forward_raw("/v2/account/link/device", "POST")
 
 @app.route("/v2/rpc/clientBootstrap", methods=["POST"])
-def route_client_bootstrap():
-    return forward_request("/v2/rpc/clientBootstrap")
+def route_client_bootstrap_post():
+    return forward_raw("/v2/rpc/clientBootstrap", "POST")
 
-@app.route("/v2/account/authenticate/custom", methods=["POST"])
-def route_authenticate_custom():
-    return forward_request("/v2/account/authenticate/custom")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3002, debug=True)
+    app.run(host="0.0.0.0", port=8080)
