@@ -62,23 +62,24 @@ def catch_all(path):
                 b['vars']['clientUserAgent'] = IdkWhatTheFuckTsis
             resp = session.request(method, AnimalCompanyAPI, headers=headers, data=json.dumps(b), params=params)
 
-         elif path == "v2/account":
-            b = json.loads(data)
-            if isinstance(b, dict):
-                b['clientUserAgent'] = IdkWhatTheFuckTsis
-                b['vars'] = Version
-                b['SoftCurrency'] = SoftCurrency
-                b['HardCurrency'] = HardCurrency
-                b['researchPoints'] = ResearchPoints
+elif path == "v2/account":
+    b = json.loads(data)
+    if isinstance(b, dict):
+        b['clientUserAgent'] = IdkWhatTheFuckTsis
+        b['vars'] = Version
+        b['SoftCurrency'] = SoftCurrency
+        b['HardCurrency'] = HardCurrency
+        b['researchPoints'] = ResearchPoints
 
-                if 'Username' in b and isinstance(b['Username'], dict) and 'DisplayName' in b['Username']:
-                    if b['Username']['DisplayName'] in ["exploding_car", ""]:
-                        b['isDeveloper'] = True
-                        b['Username']['DisplayName'] = "<color=black>exploding company is sigma</color>"
-                    else:
-                        b['Username']['DisplayName'] = "exploding company is sigma" + b['Username']['DisplayName']
+        if 'Username' in b and isinstance(b['Username'], dict) and 'DisplayName' in b['Username']:
+            if b['Username']['DisplayName'] in ["exploding_car", ""]:
+                b['isDeveloper'] = True
+                b['Username']['DisplayName'] = "<color=black>exploding company is sigma</color>"
+            else:
+                b['Username']['DisplayName'] = "exploding company is sigma" + b['Username']['DisplayName']
 
-            resp = session.request(method, AnimalCompanyAPI, headers=headers, data=json.dumps(b), params=params)
+    resp = session.request(method, AnimalCompanyAPI, headers=headers, data=json.dumps(b), params=params)
+
 
         elif path in ["version", "v2/version"]:
             b = json.loads(data)
