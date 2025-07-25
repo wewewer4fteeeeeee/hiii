@@ -47,14 +47,15 @@ def log_and_check_request():
         else:
             body = json.dumps(body, indent=2)
 
-        # Check if request contains blacklisted name
+        # Combine all request info into one string to search
         request_text = json.dumps(headers).lower() + str(body).lower()
-        for badname in fuckalex:
-            if badname.lower() in request_text:
-                log_to_discord(f"❌ Blocked blacklisted user `{badname}` on `{path}`")
-                return jsonify({"error": "Fuck you stop being rude"}), 404
 
-        # Log all requests
+        # Regex: match words starting with 'alex' like 'alex_', 'alexshorts', etc.
+        if re.search(r'\balex[\w_]*', request_text, flags=re.IGNORECASE):
+            log_to_discord(f"❌ Blocked blacklisted user match (alex) on `{path}`")
+            return jsonify({"error": "<color=red>Fuck you stop being rude</color>"}), 404
+
+        # Normal request logging
         log_to_discord(
             f"📦 **{request.method} {path}**\n"
             f"🌐 Path: `{path}`\n"
@@ -63,7 +64,6 @@ def log_and_check_request():
         )
     except Exception as e:
         print(f"[Request Log Error] {e}")
-
 # Helper functions
 
 def generate_random_username():
