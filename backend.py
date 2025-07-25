@@ -11,6 +11,7 @@ import requests
 import supabase
 from flask import Flask, request, jsonify, make_response
 from supabase import create_client
+import uuid
 
 # black
 ProdZipFile = "https://github.com/FreakyUnity/moddedanimalcompany/raw/refs/heads/main/game-data-prod.zip"
@@ -318,13 +319,12 @@ def purchase_list():
 
 
 @app.route("/Auth", methods=["GET", "POST"])
-def penis():
+def photon_auth():
+    user_id = uuid.uuid4().hex
     return jsonify({
-        "Authenticated": True,
-        "Message": "Authenticated without token",
-        "ResultCode": 1,
-        "SessionID": "4978c5b9ce08922314051341",
-        "UserId": "ac364a1734db9d6657a17fc3e6715f7e"
+        "ResultCode": 0,
+        "UserId": user_id,
+        "Message": "Authenticated successfully"
     })
 
 if __name__ == '__main__':
