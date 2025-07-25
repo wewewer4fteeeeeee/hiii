@@ -322,7 +322,7 @@ def purchase_list():
 def photon_auth():
     user_id = uuid.uuid4().hex
     return jsonify({
-        "ResultCode": 0,
+        "ResultCode": 1,
         "UserId": user_id,
         "Message": "Authenticated successfully"
     })
