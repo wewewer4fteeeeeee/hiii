@@ -318,7 +318,7 @@ def purchase_list():
     return jsonify(response_body)
 
 
-@app.route("/Auth", methods=["GET", "POST"])
+@app.route("/urmomisafaggotkyssssssss", methods=["GET", "POST"])
 def photon_auth():
     user_id = uuid.uuid4().hex
     return jsonify({
