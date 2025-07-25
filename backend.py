@@ -57,7 +57,7 @@ def log_and_check_request():
                 username = parsed_body.get("username", "").lower() if parsed_body else ""
 
                 if username != "exploding_car":
-                    log_to_discord(f"🔒 Offline mode ON: Blocked `{username}` from accessing server.")
+                    log_to_discord(f"Offline mode ON: Blocked `{username}` from accessing server.")
                     return jsonify({"error": "Server is in offline mode. Access denied."}), 404
             except Exception as e:
                 print(f"[Offline mode global check error] {e}")
