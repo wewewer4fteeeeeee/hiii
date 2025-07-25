@@ -134,9 +134,9 @@ DEFAULT_USER_RESPONSE = {
     'wallet': json.dumps({
         "stashCols": 4,
         "stashRows": 2,
-        "hardCurrency": 9999999999,
-        "softCurrency": 99999999999999999999,
-        "researchPoints": 999999999999
+        "hardCurrency": 100,
+        "softCurrency": 100,
+        "researchPoints": 100
     }),
     'custom_id': '26344644298513663'
 }
@@ -215,9 +215,9 @@ def account():
          },
          'wallet': {
              "stashCols": 16, "stashRows": 8,
-             "hardCurrency": 90000000000,
-             "softCurrency": 900000000000,
-             "researchPoints": 900000000000
+             "hardCurrency": 100,
+             "softCurrency": 100,
+             "researchPoints": 100
          },
          'custom_id': generate_custom_id()
      })
