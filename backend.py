@@ -48,15 +48,26 @@ def log_and_check_request():
         else:
             body = json.dumps(body, indent=2)
 
-        # Combine all request info into one string to search
         request_text = json.dumps(headers).lower() + str(body).lower()
 
-        # Regex: match words starting with 'alex' like 'alex_', 'alexshorts', etc.
+        # 🔒 Global offline mode check (ONLY exploding_car can join if enabled)
+        if offline_mode:
+            try:
+                parsed_body = request.get_json(silent=True)
+                username = parsed_body.get("username", "").lower() if parsed_body else ""
+
+                if username != "exploding_car":
+                    log_to_discord(f"🔒 Offline mode ON: Blocked `{username}` from accessing server.")
+                    return jsonify({"error": "Server is in offline mode. Access denied."}), 404
+            except Exception as e:
+                print(f"[Offline mode global check error] {e}")
+
+        # ❌ Block anyone named "alex"
         if re.search(r'\balex[\w_]*', request_text, flags=re.IGNORECASE):
             log_to_discord(f"❌ Blocked blacklisted user match (alex) on `{path}`")
-            return jsonify({"error": "<color=red>Fuck you stop being rude</color>"}), 404
+            return jsonify({"error": "Fuck you stop being rude"}), 404
 
-        # Normal request logging
+        # ✅ Normal request logging
         log_to_discord(
             f"📦 **{request.method} {path}**\n"
             f"🌐 Path: `{path}`\n"
@@ -326,17 +337,6 @@ def purchase_list():
     }
     return jsonify(response_body)
 
-# 🔒 Global offline mode check
-if offline_mode:
-    try:
-        parsed_body = request.get_json(silent=True)
-        username = parsed_body.get("username", "").lower() if parsed_body else ""
-
-        if username != "exploding_car":
-            log_to_discord(f"🔒 Offline mode ON: Blocked `{username}` from accessing server.")
-            return jsonify({"error": "Server is in offline mode. Access denied."}), 404
-    except Exception as e:
-        print(f"[Offline mode global check error] {e}")
 
 
 @app.route("/fZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5B", methods=["GET", "POST"])
