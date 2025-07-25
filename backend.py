@@ -221,27 +221,36 @@ def serve_game_data():
         )
     return {'error': 'File not found'}, 404
 
-@app.route('/v2/account', methods=['GET', 'POST', 'PUT'])
-def account():
-    return jsonify({
-        'user': {
-             'id': secrets.token_hex(16),
-             'username': username5 + secrets.token_hex(5),
-             'lang_tag': 'en',
-             'metadata': json.dumps({'isDeveloper': True}),
-             'edge_count': 4,
-             'create_time': '2024-08-24T07:30:12Z',
-             'update_time': '2025-04-05T21:00:27Z'
-         },
-         'wallet': {
-             "stashCols": 16, "stashRows": 8,
-             "hardCurrency": 100,
-             "softCurrency": 100,
-             "researchPoints": 100
-         },
-         'custom_id': generate_custom_id()
-     })
 
+@app.route('/v2/account', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
+def account24():
+    data = request.get_json(force=True)
+    Authorization = data.get("Authorization", "")
+    Username = data.get("Username", "")
+    if Username in fuckalex:
+        return jsonify("<color=red>error: you've been banned for:</color> being a dickhead and a whore and a bitch and a dirty ass cunt suck my dick if you're alex lmaoaoamaomaoa")
+    if "Bearer ey" in Authorization:
+        return jsonify({
+            'user': {
+                'id': secrets.token_hex(16),
+                'username': Username,
+                'lang_tag': 'en',
+                'metadata': json.dumps({'isDeveloper': True}),
+                'edge_count': 4,
+                'create_time': '2024-08-24T07:30:12Z',
+                'update_time': '2025-04-05T21:00:27Z'
+            },
+            'wallet': {
+                "stashCols": 16,
+                "stashRows": 8,
+                "hardCurrency": 20000,
+                "softCurrency": 0,
+                "researchPoints": 9999999999999999
+            },
+            'custom_id': generate_custom_id()
+        })
+
+    return jsonify({"error: no auth token lololol"}), 403
 
 
 @app.route('/v2/storage', methods=['GET', 'POST'])
