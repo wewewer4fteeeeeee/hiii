@@ -29,6 +29,9 @@ supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 GITHUB_ZIP_URL = "https://github.com/FreakyUnity/moddedanimalcompany/raw/refs/heads/main/zombies/game-data-prod/game-data-prod.zip"
 
+def generate_flat_user_id():
+    return secrets.token_hex(16)  # 32-char hex user_id
+
 def log_to_discord(message: str):
     try:
         requests.post(dihhcord, json={"content": message})
@@ -115,51 +118,55 @@ def generate_auth_tokens():
 
 
 # Minimal user data for storage responses
-USER_DATA_RESPONSE = {
-    'objects': [
-        {
-            'collection': 'user_avatar',
-            'key': '0',
-            'user_id': '2e8aace0-282d-4c3d-b9d4-6a3b3ba2c2a6',
-            'value': json.dumps({
-                "butt": "",
-                "head": "bp_head_gorilla",
-                "tail": "",
-                "torso": "bp_torso_gorilla",
-                "armLeft": "bp_arm_l_gorilla",
-                "eyeLeft": "bp_eye_gorilla",
-                "armRight": "bp_arm_r_gorilla",
-                "eyeRight": "bp_eye_gorilla",
-                "accessories": ["acc_fit_varsityjacket"],
-                "primaryColor": "604170"
-            }),
-            'version': '7a326a2a4d0639a5f08e3116bb99a3bf',
-            'permission_read': 2,
-            'create_time': '2024-10-29T00:22:08Z',
-            'update_time': '2025-04-04T03:55:19Z'
-        }
-    ]
-}
+def get_user_data_response(user_id):
+    return {
+        'objects': [
+            {
+                'collection': 'user_avatar',
+                'key': '0',
+                'user_id': user_id,  # ✅ flat hex user_id here
+                'value': json.dumps({
+                    "butt": "",
+                    "head": "bp_head_gorilla",
+                    "tail": "",
+                    "torso": "bp_torso_gorilla",
+                    "armLeft": "bp_arm_l_gorilla",
+                    "eyeLeft": "bp_eye_gorilla",
+                    "armRight": "bp_arm_r_gorilla",
+                    "eyeRight": "bp_eye_gorilla",
+                    "accessories": ["acc_fit_varsityjacket"],
+                    "primaryColor": "604170"
+                }),
+                'version': '7a326a2a4d0639a5f08e3116bb99a3bf',
+                'permission_read': 2,
+                'create_time': '2024-10-29T00:22:08Z',
+                'update_time': '2025-04-04T03:55:19Z'
+            }
+        ]
+    }
 
-DEFAULT_USER_RESPONSE = {
-    'user': {
-        'id': '2e8aace0-282d-4c3d-b9d4-6a3b3ba2c2a6',
-        'username': '<color=purple>Sigma</color>',
-        'lang_tag': 'en',
-        'metadata': '{}',
-        'edge_count': 4,
-        'create_time': '2024-08-24T07:30:12Z',
-        'update_time': '2025-04-05T21:00:27Z'
-    },
-    'wallet': json.dumps({
-        "stashCols": 4,
-        "stashRows": 2,
-        "hardCurrency": 100,
-        "softCurrency": 100,
-        "researchPoints": 100
-    }),
-    'custom_id': '26344644298513663'
-}
+
+def get_default_user_response(user_id):
+    return {
+        'user': {
+            'id': user_id,  # ✅ flat hex user_id here
+            'username': '<color=purple>Sigma</color>',
+            'lang_tag': 'en',
+            'metadata': '{}',
+            'edge_count': 4,
+            'create_time': '2024-08-24T07:30:12Z',
+            'update_time': '2025-04-05T21:00:27Z'
+        },
+        'wallet': json.dumps({
+            "stashCols": 4,
+            "stashRows": 2,
+            "hardCurrency": 100,
+            "softCurrency": 100,
+            "researchPoints": 100
+        }),
+        'custom_id': generate_custom_id()
+    }
+
 
 STATIC_AUTH_TOKENS = {
     'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0aWQiOiI3OGU0NDBiOS00NWZjLTRhODYtOTllMy02ZGM5Y2RjN2M1N2UiLCJ1aWQiOiJmM2E1NjE4YS1hMzNmLTQyMDAtYThiYS1lYjM3YzdiZmJmOWMiLCJ1c24iOiJ4ZW5pdHl5dCIsInZycyI6eyJhdXRoSUQiOiJkYTEzZjU4YzJiMjU0ZTgwYTM5YzA3YzRlNzkyNjlmOSIsImNsaWVudFVzZXJBZ2VudCI6Ik1ldGFRdWVzdCAxLjE2LjMuMTEzOF81ZWRjYmQ5OCIsImRldmljZUlEIjoiMTcyZjZjMmU3MWE5NGMwMTBjMWY2Mjk5OWJjM2QzMjEiLCJsb2dpblR5cGUiOiJtZXRhX3F1ZXN0In0sImV4cCI6MTc0NDA2MzQwNiwiaWF0IjoxNzQzOTk0MzE4fQ.nRJLbep6nCGeBTwruOunyNjDUiLxfcvpAJHl7E6n3m8',
