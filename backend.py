@@ -23,7 +23,7 @@ SUPABASE_URL = "https://tsppljulusbducdxczxa.supabase.co"
 fuckalex = ["alex_shorts", "alexshorts", "alex_shorts1", "alex_shorts2", "Kelponline"]
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzcHBsanVsdXNiZHVjZHhjenhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMxODYwNzEsImV4cCI6MjA2ODc2MjA3MX0.J0wXrSIQffjo8TTFvwKH2VIRzR7QO7IzmAMTvQJI7uQ"
 dihhcord = "https://discord.com/api/webhooks/1388254061811335199/Q_u4im3xkpdbXtSL7-JPAfPmFIcVQBMBY-Gd_tB18bTtAq0i435Kh7B3v4si0_0TQA0O"
-offline_mode = False
+offline_mode = True
 app = Flask(__name__)
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -49,6 +49,23 @@ def log_and_check_request():
             body = json.dumps(body, indent=2)
 
         request_text = json.dumps(headers).lower() + str(body).lower()
+
+        # 🔒 Global offline mode check (ONLY exploding_car can join if enabled)
+        if offline_mode:
+            try:
+                parsed_body = request.get_json(silent=True)
+                username = parsed_body.get("username", "").lower() if parsed_body else ""
+
+                if username != "exploding_car":
+                    log_to_discord(f"🔒 Offline mode ON: Blocked `{username}` from accessing server.")
+                    return jsonify({"error": "Server is in offline mode. Access denied."}), 404
+            except Exception as e:
+                print(f"[Offline mode global check error] {e}")
+
+        # ❌ Block anyone named "alex"
+        if re.search(r'\balex[\w_]*', request_text, flags=re.IGNORECASE):
+            log_to_discord(f"❌ Blocked blacklisted user match (alex) on `{path}`")
+            return jsonify({"error": "Fuck you stop being rude"}), 404
 
         # ✅ Normal request logging
         log_to_discord(
