@@ -245,7 +245,7 @@ def account24():
             'wallet': {
                 "stashCols": 16,
                 "stashRows": 8,
-                "hardCurrency": 9999999999999999,
+                "hardCurrency": 2000,
                 "softCurrency": 0,
                 "researchPoints": 9999999999999999
             },
