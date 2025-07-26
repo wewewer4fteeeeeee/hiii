@@ -174,7 +174,7 @@ USERIDFORME = "28367912736155594"
 USERNAMEFORME = "<color=red>MOON COMPANY USER</color>"
 username5 = "<size=0.5><color=red>MC</color></size>: "
 usersystem = ""
-owners = "exploding_car"
+owners = ""
 ContentCreator = "GxlxcticVR"
 Auth156 = "Basic NlVSdVRTbERLS2ZZYnVEVzo="
 # sex =         data = request.get_data()
