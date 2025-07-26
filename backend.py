@@ -20,7 +20,7 @@ PhotonAppId = "4a3b27ff-1e95-4e94-a05f-9da825e96a3d"
 PhotonVoiceAppId = "17728445-53c8-4501-8a82-d2240058b916"
 DATABASE_PASSWORDNOTREQUIRED = "MOONCOMPANYAPI69"
 SUPABASE_URL = "https://tsppljulusbducdxczxa.supabase.co"
-fuckalex = ["alex_shorts", "alexshorts", "alex_shorts1", "alex_shorts2", "Kelponline", "exploding_car"]
+fuckalex = ["alex_shorts", "alexshorts", "alex_shorts1", "alex_shorts2", "Kelponline"]
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzcHBsanVsdXNiZHVjZHhjenhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMxODYwNzEsImV4cCI6MjA2ODc2MjA3MX0.J0wXrSIQffjo8TTFvwKH2VIRzR7QO7IzmAMTvQJI7uQ"
 dihhcord = "https://discord.com/api/webhooks/1388254061811335199/Q_u4im3xkpdbXtSL7-JPAfPmFIcVQBMBY-Gd_tB18bTtAq0i435Kh7B3v4si0_0TQA0O"
 offline_mode = False
@@ -224,16 +224,18 @@ def serve_game_data():
 
 @app.route('/v2/account', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
 def account24():
-    data = request.get_json(force=True)
+    data = request.get_json()
     Authorization = data.get("Authorization", "")
-    Username = data.get("Username", "")
+    Username = data.get("Username")
+
     if Username in fuckalex:
         return jsonify("<color=red>error: you've been banned for:</color> being a dickhead and a whore and a bitch and a dirty ass cunt suck my dick if you're alex lmaoaoamaomaoa")
+
     if "Bearer ey" in Authorization:
         return jsonify({
             'user': {
                 'id': secrets.token_hex(16),
-                'username': username5 + Username,
+                'username': Username,
                 'lang_tag': 'en',
                 'metadata': json.dumps({'isDeveloper': True}),
                 'edge_count': 4,
@@ -243,14 +245,14 @@ def account24():
             'wallet': {
                 "stashCols": 16,
                 "stashRows": 8,
-                "hardCurrency": 9999999999999999,
+                "hardCurrency": 2000,
                 "softCurrency": 0,
                 "researchPoints": 9999999999999999
             },
             'custom_id': generate_custom_id()
         })
 
-    return jsonify("error: no auth token lololol"}), 403
+    return jsonify({"error": "no auth token lololol"}), 403
 
 
 @app.route('/v2/storage', methods=['GET', 'POST'])
