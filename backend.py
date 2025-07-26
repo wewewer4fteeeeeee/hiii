@@ -11,7 +11,7 @@ import requests
 import supabase
 from flask import Flask, request, jsonify, make_response
 from supabase import create_client
-
+import uuid
 # black
 ProdZipFile = "https://github.com/FreakyUnity/moddedanimalcompany/raw/refs/heads/main/game-data-prod.zip"
 DILDOPENIS = "https://github.com/FreakyUnity/moddedanimalcompany/raw/refs/heads/main/game-data-prod/econ_gameplay_items"
