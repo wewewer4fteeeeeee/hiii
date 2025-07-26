@@ -421,9 +421,9 @@ def nono():
 
 @app.route("/fZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR", methods=["GET", "POST"])
 def photon_auth():
-    user_id = uuid.uuid4().hex
+    user_id = uuid.uuid4().hex  # returns 32-char hex like yours
     return jsonify({
-        "ResultCode": 1,
+        "ResultCode": 0,
         "UserId": user_id,
         "Message": "Authenticated successfully"
     })
