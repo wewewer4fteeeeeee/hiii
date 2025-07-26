@@ -16,8 +16,8 @@ import re
 # black
 ProdZipFile = "https://github.com/FreakyUnity/moddedanimalcompany/raw/refs/heads/main/game-data-prod.zip"
 DILDOPENIS = "https://github.com/FreakyUnity/moddedanimalcompany/raw/refs/heads/main/game-data-prod/econ_gameplay_items"
-PhotonAppId = "4a3b27ff-1e95-4e94-a05f-9da825e96a3d"
-PhotonVoiceAppId = "17728445-53c8-4501-8a82-d2240058b916"
+PhotonAppId = "c8e2df68-0b36-4e3a-9811-54e44b4dd51a"
+PhotonVoiceAppId = "451b1314-c794-4a84-ae07-86b7e0a528df"
 DATABASE_PASSWORDNOTREQUIRED = "MOONCOMPANYAPI69"
 SUPABASE_URL = "https://tsppljulusbducdxczxa.supabase.co"
 fuckalex = ["alex_shorts", "alexshorts", "alex_shorts1", "alex_shorts2", "Kelponline"]
