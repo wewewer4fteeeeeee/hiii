@@ -125,11 +125,11 @@ USER_DATA_RESPONSE = {
                 "butt": "",
                 "head": "bp_head_gorilla",
                 "tail": "",
-                "torso": "",
+                "torso": "bp_torso_gorilla",
                 "armLeft": "bp_arm_l_gorilla",
                 "eyeLeft": "bp_eye_gorilla",
                 "armRight": "bp_arm_r_gorilla",
-                "eyeRight": "",
+                "eyeRight": "bp_eye_gorilla",
                 "accessories": ["acc_fit_varsityjacket"],
                 "primaryColor": "604170"
             }),
