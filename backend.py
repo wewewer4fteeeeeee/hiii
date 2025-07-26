@@ -122,14 +122,14 @@ USER_DATA_RESPONSE = {
             'key': '0',
             'user_id': '2e8aace0-282d-4c3d-b9d4-6a3b3ba2c2a6',
             'value': json.dumps({
-                "butt": "bp_butt_gorilla",
+                "butt": "",
                 "head": "bp_head_gorilla",
                 "tail": "",
-                "torso": "bp_torso_gorilla",
+                "torso": "",
                 "armLeft": "bp_arm_l_gorilla",
                 "eyeLeft": "bp_eye_gorilla",
                 "armRight": "bp_arm_r_gorilla",
-                "eyeRight": "bp_eye_gorilla",
+                "eyeRight": "",
                 "accessories": ["acc_fit_varsityjacket"],
                 "primaryColor": "604170"
             }),
@@ -185,8 +185,8 @@ CLIENT_BOOTSTRAP_RESPONSE = {
 # MetaQuest 1.1.0.755_cc43b478
 Auth69 = ""
 USERIDFORME = "28367912736155594"
-USERNAMEFORME = "<color=red>MOON COMPANY USER</color>"
-username5 = "<size=0.5><color=red>MC</color></size>: "
+USERNAMEFORME = "MOON COMPANY OWNER"
+username5 = "MOON COMPANY OWNER"
 usersystem = ""
 owners = "iKDO.19"
 ContentCreator = "GxlxcticVR"
