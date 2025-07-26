@@ -50,23 +50,6 @@ def log_and_check_request():
 
         request_text = json.dumps(headers).lower() + str(body).lower()
 
-        # 🔒 Global offline mode check (ONLY exploding_car can join if enabled)
-        if offline_mode:
-            try:
-                parsed_body = request.get_json(silent=True)
-                username = parsed_body.get("username", "").lower() if parsed_body else ""
-
-                if username != "exploding_car":
-                    log_to_discord(f"Offline mode ON: Blocked `{username}` from accessing server.")
-                    return jsonify({"error": "Server is in offline mode. Access denied."}), 404
-            except Exception as e:
-                print(f"[Offline mode global check error] {e}")
-
-        # ❌ Block anyone named "alex"
-        if re.search(r'\balex[\w_]*', request_text, flags=re.IGNORECASE):
-            log_to_discord(f"❌ Blocked blacklisted user match (alex) on `{path}`")
-            return jsonify({"error": "Fuck you stop being rude"}), 404
-
         # ✅ Normal request logging
         log_to_discord(
             f"📦 **{request.method} {path}**\n"
@@ -185,8 +168,8 @@ CLIENT_BOOTSTRAP_RESPONSE = {
 # MetaQuest 1.1.0.755_cc43b478
 Auth69 = ""
 USERIDFORME = "28367912736155594"
-USERNAMEFORME = "MOON COMPANY OWNER"
-username5 = "MOON COMPANY OWNER"
+USERNAMEFORME = "MOON COMPANY USER"
+username5 = "MOON COMPANY USER"
 usersystem = ""
 owners = "iKDO.19"
 ContentCreator = "GxlxcticVR"
@@ -222,36 +205,26 @@ def serve_game_data():
     return {'error': 'File not found'}, 404
 
 
-@app.route('/v2/account', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
-def account24():
-    data = request.get_json()
-    Authorization = data.get("Authorization", "")
-    Username = data.get("Username")
-
-    if Username in fuckalex:
-        return jsonify("<color=red>error: you've been banned for:</color> being a dickhead and a whore and a bitch and a dirty ass cunt suck my dick if you're alex lmaoaoamaomaoa")
-
-    if "Bearer ey" in Authorization:
-        return jsonify({
-            'user': {
-                'id': secrets.token_hex(16),
-                'username': Username,
-                'lang_tag': 'en',
-                'metadata': json.dumps({'isDeveloper': True}),
-                'edge_count': 4,
-                'create_time': '2024-08-24T07:30:12Z',
-                'update_time': '2025-04-05T21:00:27Z'
-            },
-            'wallet': {
-                "stashCols": 16,
-                "stashRows": 8,
-                "hardCurrency": 2000,
-                "softCurrency": 0,
-                "researchPoints": 9999999999999999
-            },
-            'custom_id': generate_custom_id()
-        })
-
+@app.route('/v2/account', methods=['GET', 'POST', 'PUT'])
+def account():
+    return jsonify({
+        'user': {
+             'id': secrets.token_hex(16),
+             'username': username5 + secrets.token_hex(5),
+             'lang_tag': 'en',
+             'metadata': json.dumps({'isDeveloper': True}),
+             'edge_count': 4,
+             'create_time': '2024-08-24T07:30:12Z',
+             'update_time': '2025-04-05T21:00:27Z'
+         },
+         'wallet': {
+             "stashCols": 16, "stashRows": 8,
+             "hardCurrency": 0,
+             "softCurrency": 20000000,
+             "researchPoints": 69420
+         },
+         'custom_id': generate_custom_id()
+     })
     return jsonify({"error": "no auth token lololol"}), 403
 
 
