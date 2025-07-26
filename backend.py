@@ -419,7 +419,7 @@ def nono():
     }
     return jsonify(itisNOTrequired), 200
 
-@app.route("/fZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5B", methods=["GET", "POST"])
+@app.route("/fZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR", methods=["GET", "POST"])
 def photon_auth():
     user_id = uuid.uuid4().hex
     return jsonify({
