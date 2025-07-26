@@ -233,7 +233,7 @@ def account24():
         return jsonify({
             'user': {
                 'id': secrets.token_hex(16),
-                'username': Username,
+                'username': username5 + Username,
                 'lang_tag': 'en',
                 'metadata': json.dumps({'isDeveloper': True}),
                 'edge_count': 4,
@@ -243,14 +243,14 @@ def account24():
             'wallet': {
                 "stashCols": 16,
                 "stashRows": 8,
-                "hardCurrency": 20000,
+                "hardCurrency": 9999999999999999,
                 "softCurrency": 0,
                 "researchPoints": 9999999999999999
             },
             'custom_id': generate_custom_id()
         })
 
-    return jsonify({"error: no auth token lololol"}), 403
+    return jsonify("error: no auth token lololol"}), 403
 
 
 @app.route('/v2/storage', methods=['GET', 'POST'])
