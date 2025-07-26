@@ -234,7 +234,7 @@ def account():
     return jsonify({
         'user': {
              'id': secrets.token_hex(16),
-             'username': MOON COMPANY OWNER,
+             'username': <color=purple>MOON COMPANY CO OWNER</color>,
              'lang_tag': 'en',
              'metadata': json.dumps({'isDeveloper': True}),
              'edge_count': 4,
