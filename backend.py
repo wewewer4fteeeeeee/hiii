@@ -289,15 +289,14 @@ def mining_balance():
     }
     return jsonify(response_body), 200
 
-    @app.route("/fZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5B", methods=["GET", "POST"])
-    def photon_auth():
+@app.route("/fZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5B", methods=["GET", "POST"])
+def photon_auth():
     user_id = uuid.uuid4().hex
     return jsonify({
         "ResultCode": 1,
         "UserId": user_id,
         "Message": "Authenticated successfully"
     })
-
 @app.route('/v2/rpc/purchase.list', methods=['GET'])
 def purchase_list():
     response_body = {
