@@ -290,7 +290,7 @@ def mining_balance():
     return jsonify(response_body), 200
 
     @app.route("/fZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5B", methods=["GET", "POST"])
-def photon_auth():
+    def photon_auth():
     user_id = uuid.uuid4().hex
     return jsonify({
         "ResultCode": 1,
