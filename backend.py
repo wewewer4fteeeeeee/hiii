@@ -249,7 +249,6 @@ def account():
          },
          'custom_id': generate_custom_id()
      })
-    return jsonify({"error": "no auth token lololol"}), 403
 
 
 @app.route('/v2/storage', methods=['GET', 'POST'])
