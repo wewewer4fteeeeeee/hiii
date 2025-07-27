@@ -30,10 +30,16 @@ GITHUB_ZIP_URL = "https://github.com/FreakyUnity/moddedanimalcompany/raw/refs/he
 
 @app.route("/fZ9xW7vLk2PqA1mCtYeR6NbG3JoUdXViH5BfZ9xW7vLk2PqA1mCtYeR", methods=["GET", "POST"])
 def photon_auth():
-    user_id = uuid.uuid4().hex  # returns 32-char hex like yours
+    def generate_ac_id():
+        return "ac" + uuid.uuid4().hex[2:]  # Ensures 32-char string starting with 'ac'
+
+    user_id = generate_ac_id()
+    session_id = generate_ac_id()
+
     return jsonify({
-        "ResultCode": 1,
+        "ResultCode": 0,
         "UserId": user_id,
+        "SessionID": session_id,
         "Message": "Authenticated successfully"
     })
 
