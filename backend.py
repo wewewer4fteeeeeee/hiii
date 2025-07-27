@@ -37,7 +37,7 @@ def photon_auth():
     session_id = generate_ac_id()
 
     return jsonify({
-        "ResultCode": 0,
+        "ResultCode": 1,
         "UserId": user_id,
         "SessionID": session_id,
         "Message": "Authenticated successfully"
