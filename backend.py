@@ -1,3 +1,4 @@
+
 import json
 import secrets
 import base64
@@ -81,23 +82,18 @@ def generate_jwt_token(user_id):
     payload = {
         'tid': secrets.token_hex(16),
         'uid': user_id,
-        'usn': ''.join(random.choices(string.ascii_letters, k=8)),
+        'usn': secrets.token_hex(5),
         'vrs': {
             'authID': secrets.token_hex(20),
-            'clientUserAgent': 'MetaQuest 1.30.0.1478',  # Spoofed version
+            'clientUserAgent': 'MetaQuest 1.2.0_731_54fb75be9',
             'deviceID': secrets.token_hex(20),
             'loginType': 'meta_quest'
         },
-        'exp': now + 3600 * 24,
+        'exp': now + 72000,
         'iat': now
     }
-
-    def b64(obj):
-        return base64.urlsafe_b64encode(json.dumps(obj).encode()).decode().rstrip("=")
-
-    fake_signature = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode().rstrip("=")
-
-    return f"{b64(header)}.{b64(payload)}.{fake_signature}"
+    signature = secrets.token_urlsafe(32)
+    return f"{b64encode_json(header)}.{b64encode_json(payload)}.{signature}"
 
 def generate_auth_tokens():
     user_id = secrets.token_hex(16)
@@ -162,15 +158,15 @@ STATIC_AUTH_TOKENS = {
 CLIENT_BOOTSTRAP_RESPONSE = {
     'payload': json.dumps({
         "updateType": "Optional",
-        "attestResult": "Valid",  # <--- spoof this as always valid
-        "attestTokenExpiresAt": int(time.time()) + 3600 * 24,
+        "attestResult": "Valid",
+        "attestTokenExpiresAt": 1820877961,
         "photonAppID": PhotonAppId,
-        "photonVoiceAppID": PhotonVoiceAppId,
+        "photonVoiceAppID": PhotonVoiceAppId,   # <-- COMMA HERE
         "termsAcceptanceNeeded": [],
         "dailyMissionDateKey": [],
         "dailyMissions": None,
         "dailyMissionResetTime": 0,
-        "serverTimeUnix": int(time.time()),
+        "serverTimeUnix": 1720877961,
         "gameDataUrl": ProdZipFile
     })
 }
@@ -247,11 +243,7 @@ def storage():
 
 @app.route('/v2/account/authenticate/custom', methods=['POST', 'GET'])
 def authenticate_custom():
-    user_id = secrets.token_hex(16)
-    return jsonify({
-        'token': generate_jwt_token(user_id),
-        'refresh_token': generate_jwt_token(user_id)
-    })
+    return jsonify(generate_auth_tokens())
 
 
 
