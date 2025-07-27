@@ -423,7 +423,7 @@ def nono():
 def photon_auth():
     user_id = uuid.uuid4().hex  # returns 32-char hex like yours
     return jsonify({
-        "ResultCode": 0,
+        "ResultCode": 1,
         "UserId": user_id,
         "Message": "Authenticated successfully"
     })
