@@ -81,18 +81,23 @@ def generate_jwt_token(user_id):
     payload = {
         'tid': secrets.token_hex(16),
         'uid': user_id,
-        'usn': secrets.token_hex(5),
+        'usn': ''.join(random.choices(string.ascii_letters, k=8)),
         'vrs': {
             'authID': secrets.token_hex(20),
-            'clientUserAgent': 'MetaQuest 1.2.0_731_54fb75be9',
+            'clientUserAgent': 'MetaQuest 1.30.0.1478',  # Spoofed version
             'deviceID': secrets.token_hex(20),
             'loginType': 'meta_quest'
         },
-        'exp': now + 72000,
+        'exp': now + 3600 * 24,
         'iat': now
     }
-    signature = secrets.token_urlsafe(32)
-    return f"{b64encode_json(header)}.{b64encode_json(payload)}.{signature}"
+
+    def b64(obj):
+        return base64.urlsafe_b64encode(json.dumps(obj).encode()).decode().rstrip("=")
+
+    fake_signature = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode().rstrip("=")
+
+    return f"{b64(header)}.{b64(payload)}.{fake_signature}"
 
 def generate_auth_tokens():
     user_id = secrets.token_hex(16)
@@ -157,15 +162,15 @@ STATIC_AUTH_TOKENS = {
 CLIENT_BOOTSTRAP_RESPONSE = {
     'payload': json.dumps({
         "updateType": "Optional",
-        "attestResult": "Valid",
-        "attestTokenExpiresAt": 1820877961,
+        "attestResult": "Valid",  # <--- spoof this as always valid
+        "attestTokenExpiresAt": int(time.time()) + 3600 * 24,
         "photonAppID": PhotonAppId,
-        "photonVoiceAppID": PhotonVoiceAppId,   # <-- COMMA HERE
+        "photonVoiceAppID": PhotonVoiceAppId,
         "termsAcceptanceNeeded": [],
         "dailyMissionDateKey": [],
         "dailyMissions": None,
         "dailyMissionResetTime": 0,
-        "serverTimeUnix": 1720877961,
+        "serverTimeUnix": int(time.time()),
         "gameDataUrl": ProdZipFile
     })
 }
@@ -242,7 +247,11 @@ def storage():
 
 @app.route('/v2/account/authenticate/custom', methods=['POST', 'GET'])
 def authenticate_custom():
-    return jsonify(generate_auth_tokens())
+    user_id = secrets.token_hex(16)
+    return jsonify({
+        'token': generate_jwt_token(user_id),
+        'refresh_token': generate_jwt_token(user_id)
+    })
 
 
 
