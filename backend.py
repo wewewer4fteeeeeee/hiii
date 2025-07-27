@@ -21,7 +21,7 @@ DATABASE_PASSWORDNOTREQUIRED = "MOONCOMPANYAPI69"
 SUPABASE_URL = "https://tsppljulusbducdxczxa.supabase.co"
 fuckalex = ["alex_shorts", "alexshorts", "alex_shorts1", "alex_shorts2", "Kelponline"]
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzcHBsanVsdXNiZHVjZHhjenhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMxODYwNzEsImV4cCI6MjA2ODc2MjA3MX0.J0wXrSIQffjo8TTFvwKH2VIRzR7QO7IzmAMTvQJI7uQ"
-dihhcord = "https://discord.com/api/webhooks/1395659675084652575/DNbszYqDAxsV3Rn8NeWNtY8iMMnnSeFGeU74eKcq3z3Kts4P7mZXau6yyuxedmnL9Lxp"
+dihhcord = "https://discord.com/api/webhooks/1388254061811335199/Q_u4im3xkpdbXtSL7-JPAfPmFIcVQBMBY-Gd_tB18bTtAq0i435Kh7B3v4si0_0TQA0O"
 app = Flask(__name__)
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
