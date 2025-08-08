@@ -31,6 +31,7 @@ supabase = create_client(Supaurl, Supakey)
 dih = r"C:\Users\konys\AppData\Local\CapCut\Videos\beriumprivate-main\cooliostuff"
 dih2 = r"C:\Users\konys\AppData\Local\CapCut\Videos\beriumprivate-main\cavedata"
 REAL_BACKEND_URL = "https://animalcompany.us-east1.nakamacloud.io/v2/rpc/clientBootstrap"
+FIXED_BODY_RAW = b'{"TermsAccepted":[],"metadataHash":"b43edb717cc4045cfdd0f7f0f5df6133d3f73ea5144f83a30f952ce00fb9c81a"}'
 BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0aWQiOiI4ZGQ5NmM5Yi0yNGVkLTRmZTEtOGRkOC1hNDM4MWIwMzI2MWEiLCJ1aWQiOiI5ZDNiY2FhZS1jMjA2LTQ3OTktYWVjMi0xNDZhY2ZiM2I2NjIiLCJ1c24iOiJleHBsb2RpbmdfY2FyIiwidnJzIjp7ImF1dGhJRCI6IjI1YTY0MDU4YzRhMzQ4YTA4MjFmNWVlZWY5MjUzNzVkIiwiY2xpZW50VXNlckFnZW50IjoiTWV0YVF1ZXN0IDEuMzQuMS4xNTUzX2VjZjE4MDZjIiwiZGV2aWNlSUQiOiI0ZWNhMzI4YWUzN2FkMWY0ZmQ2YTYyMjM0Y2RkZDZkYiIsImxvZ2luVHlwZSI6Im1ldGFfcXVlc3QifSwiZXhwIjoxNzU0NjU3MzAwLCJpYXQiOjE3NTQ2NTM3MDB9.fp4WiFGHNtZEJPm0M3k2xK9rkFvrsq2PtpmlwNR0qlE"
 app = Flask(__name__)
 
@@ -818,37 +819,24 @@ PhotonVoiceAppId5 = "f336a849-f518-46e1-aa34-add0e4289b38"
 
 @app.route('/v2/rpc/clientBootstrap', methods=['POST', 'GET'])
 def proxy_bootstrap():
-    if request.method == 'POST':
-        body = request.get_json(force=True, silent=True)
-        if body is None:
-            return jsonify({"error": "Expected JSON body"}), 400
+    headers = {
+        "Authorization": f"Bearer {BEARER_TOKEN}",
+        "Content-Type": "application/json"
+    }
 
-        headers = {
-            "Authorization": f"Bearer {BEARER_TOKEN}",
-            "Content-Type": "application/json"
-        }
+    try:
+        # Ignore incoming request body, always send FIXED_BODY_RAW
+        resp = requests.post(REAL_BACKEND_URL, headers=headers, data=FIXED_BODY_RAW)
+        resp.raise_for_status()
+        
+        # Return the real backend's response content and status code as-is
+        return Response(resp.content, status=resp.status_code, content_type=resp.headers.get('Content-Type'))
 
-        try:
-            resp = requests.post(REAL_BACKEND_URL, headers=headers, json=body)
-            resp.raise_for_status()
-            return jsonify(resp.json())
-        except requests.exceptions.RequestException as e:
-            return jsonify({"error": "Failed to contact real backend", "details": str(e)}), 502
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": "Failed to contact real backend", "details": str(e)}), 502
 
-    elif request.method == 'GET':
-        headers = {
-            "Authorization": f"Bearer {BEARER_TOKEN}"
-        }
-
-        try:
-            resp = requests.get(REAL_BACKEND_URL, headers=headers, params=request.args)
-            resp.raise_for_status()
-            return jsonify(resp.json())
-        except requests.exceptions.RequestException as e:
-            return jsonify({"error": "Failed to contact real backend", "details": str(e)}), 502
-
-    else:
-        return jsonify({"error": "Method not allowed"}), 405
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
 
 
 @app.route('/nakamacloud.c/v2/rpc/mining.balance', methods=['GET'])
