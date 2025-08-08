@@ -816,7 +816,7 @@ PhotonVoiceAppId1 = "52688ea6-5ea9-41e9-86f5-f9c53d723970"
 PhotonAppId5 = "fd9600e2-f257-4cf7-96cf-058b2576fbae"
 PhotonVoiceAppId5 = "f336a849-f518-46e1-aa34-add0e4289b38"
 
-@app.route('/v2/rpc/clientBootstrap', methods=['POST'])
+@app.route('/v2/rpc/clientBootstrap', methods=["GET", "POST"])
 def proxy_bootstrap():
     body = request.get_json()
 
