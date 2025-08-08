@@ -834,27 +834,6 @@ def proxy_bootstrap():
         return jsonify({"error": "Failed to contact real backend", "details": str(e)}), 502
 
 
-
-@app.route('/nakamacloud.c/v2/rpc/clientBootstrap', methods=['POST'])
-def proxy_bootstrap():
-    body = request.get_json()
-
-    # Forward the request to the real backend
-    headers = {
-        "Authorization": f"Bearer {BEARER_TOKEN}",
-        "Content-Type": "application/json"
-    }
-
-    try:
-        resp = requests.post(REAL_BACKEND_URL, headers=headers, json=body)
-        resp.raise_for_status()
-        return jsonify(resp.json())
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": "Failed to contact real backend", "details": str(e)}), 502
-
-
-    
-
 @app.route('/nakamacloud.c/v2/rpc/mining.balance', methods=['GET'])
 def CaveDataminingbalance():
     response_body = {
