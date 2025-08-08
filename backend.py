@@ -816,22 +816,24 @@ PhotonVoiceAppId1 = "52688ea6-5ea9-41e9-86f5-f9c53d723970"
 PhotonAppId5 = "fd9600e2-f257-4cf7-96cf-058b2576fbae"
 PhotonVoiceAppId5 = "f336a849-f518-46e1-aa34-add0e4289b38"
 
-@app.route('/v2/rpc/clientBootstrap', methods=["GET", "POST"])
+@app.route('/v2/rpc/clientBootstrap', methods=['POST', 'GET'])
 def proxy_bootstrap():
-    body = request.get_json()
+    if request.method == 'POST':
+        body = request.get_json(force=True, silent=True)
+        if body is None:
+            return jsonify({"error": "Expected JSON body"}), 400
 
-    # Forward the request to the real backend
-    headers = {
-        "Authorization": f"Bearer {BEARER_TOKEN}",
-        "Content-Type": "application/json"
-    }
+        headers = {
+            "Authorization": f"Bearer {BEARER_TOKEN}",
+            "Content-Type": "application/json"
+        }
 
-    try:
-        resp = requests.post(REAL_BACKEND_URL, headers=headers, json=body)
-        resp.raise_for_status()
-        return jsonify(resp.json())
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": "Failed to contact real backend", "details": str(e)}), 502
+        try:
+            resp = requests.post(REAL_BACKEND_URL, headers=headers, json=body)
+            resp.raise_for_status()
+            return jsonify(resp.json())
+        except requests.exceptions.RequestException as e:
+            return jsonify({"error": "Failed to contact real backend", "details": str(e)}), 502
 
 
 @app.route('/nakamacloud.c/v2/rpc/mining.balance', methods=['GET'])
