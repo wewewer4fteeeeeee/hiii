@@ -835,6 +835,21 @@ def proxy_bootstrap():
         except requests.exceptions.RequestException as e:
             return jsonify({"error": "Failed to contact real backend", "details": str(e)}), 502
 
+    elif request.method == 'GET':
+        headers = {
+            "Authorization": f"Bearer {BEARER_TOKEN}"
+        }
+
+        try:
+            resp = requests.get(REAL_BACKEND_URL, headers=headers, params=request.args)
+            resp.raise_for_status()
+            return jsonify(resp.json())
+        except requests.exceptions.RequestException as e:
+            return jsonify({"error": "Failed to contact real backend", "details": str(e)}), 502
+
+    else:
+        return jsonify({"error": "Method not allowed"}), 405
+
 
 @app.route('/nakamacloud.c/v2/rpc/mining.balance', methods=['GET'])
 def CaveDataminingbalance():
