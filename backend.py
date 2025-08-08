@@ -30,7 +30,7 @@ dihhcord = "https://discord.com/api/webhooks/1399808123757264926/Loz-e795u3V3uzg
 supabase = create_client(Supaurl, Supakey)
 dih = r"C:\Users\konys\AppData\Local\CapCut\Videos\beriumprivate-main\cooliostuff"
 dih2 = r"C:\Users\konys\AppData\Local\CapCut\Videos\beriumprivate-main\cavedata"
-REAL_BACKEND_URL = "https://your.real.meta.backend.url/v2/rpc/clientBootstrap"
+REAL_BACKEND_URL = "https://animalcompany.us-east1.nakamacloud.io/v2/rpc/clientBootstrap"
 BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0aWQiOiI4ZGQ5NmM5Yi0yNGVkLTRmZTEtOGRkOC1hNDM4MWIwMzI2MWEiLCJ1aWQiOiI5ZDNiY2FhZS1jMjA2LTQ3OTktYWVjMi0xNDZhY2ZiM2I2NjIiLCJ1c24iOiJleHBsb2RpbmdfY2FyIiwidnJzIjp7ImF1dGhJRCI6IjI1YTY0MDU4YzRhMzQ4YTA4MjFmNWVlZWY5MjUzNzVkIiwiY2xpZW50VXNlckFnZW50IjoiTWV0YVF1ZXN0IDEuMzQuMS4xNTUzX2VjZjE4MDZjIiwiZGV2aWNlSUQiOiI0ZWNhMzI4YWUzN2FkMWY0ZmQ2YTYyMjM0Y2RkZDZkYiIsImxvZ2luVHlwZSI6Im1ldGFfcXVlc3QifSwiZXhwIjoxNzU0NjU3MzAwLCJpYXQiOjE3NTQ2NTM3MDB9.fp4WiFGHNtZEJPm0M3k2xK9rkFvrsq2PtpmlwNR0qlE"
 app = Flask(__name__)
 
